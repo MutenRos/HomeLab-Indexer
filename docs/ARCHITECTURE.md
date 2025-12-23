@@ -1,5 +1,8 @@
 # Architecture
 
+> Nota: El despliegue con Docker/Compose se ha movido a la rama `docker-support`.
+> En `main`, el flujo recomendado es desarrollo local con `npm run dev`.
+
 ## Overview
 
 HomeLab Indexer es una aplicación monolítica que consta de:
@@ -108,18 +111,7 @@ HomeLab Indexer es una aplicación monolítica que consta de:
 
 ## Deployment
 
-### Docker Compose
-
-```
-api (Express) ─┐
-ui (React)    ├─→ homelab-net
-scanner       ┤
-db (SQLite)  ─┘
-```
-
-Cada componente en contenedor separado, compartiendo volumen de BD.
-
-### Local
+### Local (main)
 
 ```bash
 npm install
@@ -130,6 +122,11 @@ npm run dev
 API: http://localhost:3001
 UI: http://localhost:5173
 Scanner: internal schedule
+
+### Docker (docker-support)
+
+Consulta la rama: https://github.com/MutenRos/HomeLab-Indexer/tree/docker-support
+Allí encontrarás `docker-compose.yml` y Dockerfiles listos para producción.
 
 ## Security
 

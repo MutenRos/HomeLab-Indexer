@@ -35,11 +35,12 @@
   - Navegación responsive
 
 ### Integración
-- ✅ **Docker Compose**: Stack completo (API + UI + Scanner + DB)
+- ✅ **Local Dev**: `npm run dev` inicia API + UI + Scanner
 - ✅ **Shared Types**: DTOs en `packages/shared`
 - ✅ **Environment Config**: `.env.example` con todas las variables
 - ✅ **Database Migrations**: Schema SQL con indexes
 - ✅ **Acceptance Tests**: Suite de tests en Jest
+- ℹ️ **Docker/Compose** disponible en rama `docker-support`
 
 ### Documentación
 - ✅ `README.md` - Guía de inicio rápido
@@ -49,29 +50,20 @@
 - ✅ `docs/INTEGRATION.md` - Guía de integración de componentes
 
 ### Infrastructure
-- ✅ `infra/docker/Dockerfile.api`
-- ✅ `infra/docker/Dockerfile.ui`
-- ✅ `infra/docker/Dockerfile.scanner`
-- ✅ `docker-compose.yml` - Stack completo
+- ✅ `infra/migrations/` - SQL schema
 - ✅ `.gitignore`, `.eslintrc.json`, `.prettierrc.json`
+- ℹ️ Dockerfiles y `docker-compose.yml` viven en la rama `docker-support`
 
 ---
 
-## 🚀 Cómo Empezar
-
-### Opción 1: Docker (Recomendado)
-```bash
-cp .env.example .env
-docker-compose up -d
-# Acceder: http://localhost:5173
-```
-
-### Opción 2: Local
+## 🚀 Cómo Empezar (Local)
 ```bash
 npm install
 npm run db:migrate
 npm run dev  # Inicia API + UI + Scanner
 ```
+
+Docker/Compose: ver https://github.com/MutenRos/HomeLab-Indexer/tree/docker-support
 
 ---
 
@@ -97,8 +89,6 @@ homelab-indexer/
 ├── packages/
 │   └── shared/                 # Tipos compartidos
 ├── infra/
-│   ├── docker/                 # Dockerfiles
-│   ├── compose/                # docker-compose.yml
 │   └── migrations/             # SQL schema
 ├── docs/
 │   ├── API.md
@@ -106,7 +96,6 @@ homelab-indexer/
 │   ├── OPERATIONS.md
 │   └── INTEGRATION.md
 ├── .env.example
-├── docker-compose.yml
 ├── package.json
 └── README.md
 ```
@@ -140,7 +129,8 @@ homelab-indexer/
 
 ✅ **MVP-Core**: Auth + seguridad + docs
 - Estructura monolítica
-- Docker Compose ready
+- Desarrollo local listo (`npm run dev`)
+- Docker en rama `docker-support`
 - Documentación completa
 - Tests de aceptación
 
@@ -224,12 +214,12 @@ curl -X POST http://localhost:3001/reservations/import \
 
 ---
 
-## 📞 Troubleshooting Rápido
+## 📞 Troubleshooting Rápido (Local)
 
 **"No veo dispositivos"**
 - Revisar: `curl http://localhost:3001/health`
 - Verificar subnets en `.env`
-- Revisar logs: `docker-compose logs scanner`
+- Revisa la terminal donde corre API/Scanner (salida de `npm run dev`)
 
 **"Servicios vacíos"**
 - Esperar a que scanner termine (5-30min según subnet)
@@ -238,8 +228,7 @@ curl -X POST http://localhost:3001/reservations/import \
 
 **"BD corrupta"**
 ```bash
-docker-compose down -v
-docker-compose up -d
+rm -rf data/indexer.db
 npm run db:migrate
 ```
 
