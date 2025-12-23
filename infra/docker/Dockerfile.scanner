@@ -1,0 +1,20 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install scanner dependencies
+RUN apk add --no-cache iputils bind-tools
+
+# Copy workspace files
+COPY package*.json ./
+COPY packages/shared ./packages/shared
+COPY apps/scanner ./apps/scanner
+
+# Install dependencies
+RUN npm ci
+
+# Build
+RUN npm run -w packages/shared build
+RUN npm run -w apps/scanner build
+
+CMD ["npm", "run", "-w", "apps/scanner", "start"]

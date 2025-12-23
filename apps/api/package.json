@@ -1,0 +1,40 @@
+{
+  "name": "@homelab-indexer/api",
+  "version": "0.1.0",
+  "description": "REST API for HomeLab Indexer",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:migrate": "ts-node src/db/migrate.ts",
+    "db:seed": "ts-node src/db/seed.ts",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write src",
+    "test": "jest",
+    "test:acceptance": "jest __tests__/acceptance"
+  },
+  "dependencies": {
+    "@homelab-indexer/shared": "*",
+    "express": "^4.18.0",
+    "sqlite3": "^5.1.0",
+    "cors": "^2.8.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "dotenv": "^16.0.0",
+    "pino": "^8.0.0",
+    "yaml": "^2.0.0",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.0.0",
+    "nodemon": "^3.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "supertest": "^6.3.0"
+  }
+}

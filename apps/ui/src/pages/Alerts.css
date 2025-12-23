@@ -1,0 +1,178 @@
+.alerts {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.alerts h1 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #1a202c;
+}
+
+.alerts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.alerts-filters {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #4a5568;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+.alerts-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.alert-item {
+  position: relative;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #cbd5e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.alert-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateX(4px);
+}
+
+.alert-item.new_device {
+  border-left-color: #48bb78;
+}
+
+.alert-item.ip_change {
+  border-left-color: #ed8936;
+}
+
+.alert-item.service_down {
+  border-left-color: #f56565;
+}
+
+.alert-item.service_up {
+  border-left-color: #4299e1;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 0.5rem;
+}
+
+.alert-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #2d3748;
+}
+
+.alert-time {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.alert-description {
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.alert-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.alert-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.alert-badge.new_device {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.alert-badge.ip_change {
+  background: #feebc8;
+  color: #7c2d12;
+}
+
+.alert-badge.service_down {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.alert-badge.service_up {
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.alert-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #a0aec0;
+}
+
+@media (max-width: 768px) {
+  .alerts {
+    padding: 1rem;
+  }
+
+  .alerts-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .alerts-filters {
+    flex-direction: column;
+  }
+
+  .filter-btn {
+    width: 100%;
+  }
+
+  .alert-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .alert-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

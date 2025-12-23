@@ -1,0 +1,17 @@
+-- Migration 002: Add audit columns (DISABLED - causing issues)
+-- Created: 2025-12-23
+-- Safely adds optional audit columns if they don't exist
+
+-- PRAGMA foreign_keys = OFF;
+-- 
+-- BEGIN TRANSACTION;
+-- 
+-- -- Try adding columns if they don't exist
+-- -- SQLite will ignore these if columns already exist
+-- ALTER TABLE devices ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT NULL;
+-- ALTER TABLE ip_leases ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT NULL;
+-- ALTER TABLE services ADD COLUMN IF NOT EXISTS confidence_score REAL DEFAULT 0.0;
+-- 
+-- COMMIT;
+-- 
+-- PRAGMA foreign_keys = ON;

@@ -1,0 +1,26 @@
+{
+  "name": "@homelab-indexer/scanner",
+  "version": "0.1.0",
+  "description": "Network Scanner Service",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write src"
+  },
+  "dependencies": {
+    "@homelab-indexer/shared": "*",
+    "axios": "^1.4.0",
+    "node-arp": "^1.0.6",
+    "dotenv": "^16.0.0",
+    "pino": "^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.0.0",
+    "nodemon": "^3.0.0"
+  }
+}
