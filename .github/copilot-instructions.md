@@ -9,7 +9,7 @@ HomeLab Indexer es una aplicación web monolítica para inventariar dispositivos
 - Frontend: React + TypeScript + Vite
 - Scanner: Node.js service
 - Database: SQLite
-- Deployment: Docker Compose
+- Deployment: Local npm (Docker/Compose en rama `docker-support`)
 
 ## Code Organization
 
@@ -23,8 +23,6 @@ packages/
 └── shared/           # Shared types & DTOs
 
 infra/
-├── docker/           # Dockerfiles
-├── compose/          # docker-compose.yml
 └── migrations/       # SQL migrations
 
 scripts/
@@ -57,7 +55,7 @@ npm run test             # Run tests
 - **Build**: `npm run build`
 - **Migrate DB**: `npm run db:migrate`
 - **Run tests**: `npm run test`
-- **Docker**: `docker-compose up -d`
+Docker se gestiona en la rama `docker-support`.
 
 ## Git Workflow
 
@@ -99,8 +97,6 @@ Key routes:
 
 ## Debugging
 
-- API logs: `docker-compose logs api`
-- Scanner logs: `docker-compose logs scanner`
 - DB issues: `sqlite3 /path/to/indexer.db`
 
 ## Security Notes
@@ -114,10 +110,7 @@ Key routes:
 ## Troubleshooting
 
 ### DB locked
-```bash
-docker-compose down
-docker-compose up -d
-```
+Si usas SQLite local y ves "database is locked": cierra procesos que usen la BD o reinicia `npm run dev`.
 
 ### Tests fail
 ```bash
@@ -126,7 +119,7 @@ npm run test
 ```
 
 ### Port conflicts
-Edit `docker-compose.yml` ports section or kill process on port 3001/5173
+Mata el proceso en el puerto 3001/5173 o cambia `API_PORT`/`VITE_PORT` en `.env`.
 
 ---
 

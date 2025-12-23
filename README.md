@@ -20,14 +20,6 @@ Inventario de red para tu homelab. Escanea dispositivos, detecta servicios, y te
 ## Instalación rápida
 
 ```bash
-# 1. Copiar configuración
-cp .env.example .env
-
-# 2. Iniciar todo (API + UI + Scanner + DB)
-docker-compose up -d
-
-# 3. Acceder
-```bash
 # Clonar
 git clone https://github.com/MutenRos/HomeLab-Indexer.git
 cd HomeLab-Indexer
@@ -37,21 +29,20 @@ npm install
 
 # Configurar (opcional)
 cp .env.example .env
-# Edita .env y cambia las subnets si no usas 192.168.1.0/24
+# Edita .env y ajusta subnets si no usas 192.168.1.0/24
 
 # Arrancar todo (API + UI + Scanner)
 npm run dev
 ```
 
-La UI va a estar en http://localhost:5173
+La UI estará en http://localhost:5173 y la API en http://localhost:3001.
 
-## Uso con Docker (recomendado para producción)
+### Docker
 
-```bash
-docker-compose up -d
-```
+El soporte de Docker/Compose se ha movido a la rama `docker-support` para mantener `main` ligero para desarrollo local.
 
-La UI estará en http://localhost:5173 y la API en http://localhost:3001
+- Rama: https://github.com/MutenRos/HomeLab-Indexer/tree/docker-support
+- Instrucciones Docker allí en `README.md` y `docs/*`.
 
 ## Configuración
 
@@ -140,6 +131,9 @@ No hay migraciones automáticas. Si actualizas y hay cambios en el schema, borra
 **Puerto ya en uso**
 - Mata el proceso: `netstat -ano | findstr "3001"` o `lsof -i :3001` en Linux
 - Cambia el puerto en `.env` con `API_PORT=3002`
+
+**¿Docker?**
+- Usar la rama `docker-support` si quieres Compose.
 
 ## TODOs / Ideas
 
