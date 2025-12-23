@@ -1,55 +1,110 @@
 import { useState } from 'react';
+import './Settings.css';
+
+interface ScanStats {
+  scan_id?: string;
+  status?: string;
+}
 
 export default function Settings() {
   const [subnets, setSubnets] = useState('192.168.1.0/24');
   const [loading, setLoading] = useState(false);
+  const [scanResult, setScanResult] = useState<ScanStats | null>(null);
 
   async function triggerScan() {
     try {
       setLoading(true);
+      setScanResult(null);
       const res = await fetch(`${import.meta.env.VITE_API_URL}/scanner/scan-now`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subnets: subnets.split(',').map(s => s.trim()) }),
+        body: JSON.stringify({ 
+          subnets: subnets.split(',').map(s => s.trim()),
+          port_scan: true 
+        }),
       });
       const data = await res.json();
-      alert(`Scan started: ${data.scan_id}`);
+      setScanResult({ scan_id: data.scan_id, status: 'started' });
+      
+      setTimeout(() => {
+        setScanResult(prev => prev ? { ...prev, status: 'complete' } : null);
+      }, 3000);
     } catch (error) {
       console.error('Scan failed:', error);
-      alert('Scan failed');
+      setScanResult({ status: 'error' });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>⚙️ Settings</h1>
-      
-      <div style={{ marginBottom: '20px', maxWidth: '500px' }}>
-        <label>Subnets to scan (comma-separated):</label>
-        <textarea
-          value={subnets}
-          onChange={(e) => setSubnets(e.target.value)}
-          style={{ width: '100%', height: '100px', padding: '10px' }}
-        />
+    <div className="settings">
+      <div className="settings-header">
+        <h1>⚙️ Settings</h1>
+        <p className="subtitle">Configure network scanning and preferences</p>
       </div>
 
-      <button
-        onClick={triggerScan}
-        disabled={loading}
-        style={{
-          padding: '10px 20px',
-          background: '#007bff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.6 : 1,
-        }}
-      >
-        {loading ? 'Scanning...' : '🔍 Scan Network Now'}
-      </button>
+      <div className="settings-card">
+        <div className="card-header">
+          <div className="card-icon">🔍</div>
+          <div>
+            <h2>Network Scanner</h2>
+            <p>Configure and trigger network discovery</p>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="subnets">Subnets to Scan</label>
+          <textarea
+            id="subnets"
+            value={subnets}
+            onChange={(e) => setSubnets(e.target.value)}
+            placeholder="192.168.1.0/24, 192.168.50.0/24"
+            rows={4}
+          />
+          <small>Comma-separated list of CIDR subnets</small>
+        </div>
+
+        <button
+          onClick={triggerScan}
+          disabled={loading}
+          className="scan-btn"
+        >
+          {loading ? '⏳ Scanning...' : '🚀 Start Network Scan'}
+        </button>
+
+        {scanResult && (
+          <div className={`scan-result ${scanResult.status}`}>
+            {scanResult.status === 'started' && (
+              <>
+                <span className="result-icon">✅</span>
+                <div>
+                  <strong>Scan Started</strong>
+                  <p>Scan ID: <code>{scanResult.scan_id}</code></p>
+                </div>
+              </>
+            )}
+            {scanResult.status === 'complete' && (
+              <>
+                <span className="result-icon">🎉</span>
+                <div>
+                  <strong>Scan Complete!</strong>
+                  <p>Check inventory for discovered devices</p>
+                </div>
+              </>
+            )}
+            {scanResult.status === 'error' && (
+              <>
+                <span className="result-icon">❌</span>
+                <div>
+                  <strong>Scan Failed</strong>
+                  <p>Check console for errors</p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
