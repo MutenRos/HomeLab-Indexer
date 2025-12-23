@@ -1,11 +1,13 @@
 # Operations Guide
 
+> Nota: El despliegue con Docker/Compose se ha movido a la rama `docker-support`.
+> En `main`, sigue las instrucciones locales del README y FIRST_RUN.md.
+
 ## Deployment Checklist
 
 ### Prerequisites
-- Docker & Docker Compose (para containerización)
-- O bien: Node.js 18+, npm/yarn, SQLite3
-- Linux/WSL (recomendado)
+- Node.js 18+, npm/yarn, SQLite3
+- (Opcional) Docker/Compose: ver rama `docker-support`
 
 ### Environment Setup
 
@@ -28,17 +30,7 @@ npm run scripts:hash-password admin
 
 ### Docker Compose Startup
 
-```bash
-# Iniciar stack
-docker-compose up -d
-
-# Verificar status
-docker-compose ps
-
-# Logs en tiempo real
-docker-compose logs -f api
-docker-compose logs -f scanner
-```
+Ver rama `docker-support`.
 
 ### Manual Startup (Local)
 
@@ -56,17 +48,11 @@ curl http://localhost:3001/health
 ```
 
 ### View Logs
-```bash
-docker-compose logs -f api    # API logs
-docker-compose logs -f scanner # Scanner logs
-docker-compose logs -f ui     # UI logs
-```
+- Revisa las terminales donde corriste `npm run dev` (API/Scanner) o `npm run -w apps/ui dev` (UI)
 
 ### Database Check
 ```bash
-docker exec -it homelab-indexer-db sqlite3 /data/indexer.db
-sqlite> SELECT COUNT(*) FROM devices;
-sqlite> .quit
+sqlite3 data/indexer.db "SELECT COUNT(*) FROM devices;"
 ```
 
 ## Backup & Restore
@@ -102,12 +88,8 @@ grep SCANNER_SUBNETS .env
 # Probar ping manual
 ping 192.168.1.1
 
-# Revisar logs del scanner
-docker-compose logs scanner | grep -i "error\|warn"
-
 # Ejecutar escaneo manual desde API
 curl -X POST http://localhost:3001/scanner/scan-now \
-  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{"subnets": ["192.168.1.0/24"]}'
 ```
@@ -123,11 +105,8 @@ curl -X POST http://localhost:3001/scanner/scan-now \
 
 **Soluciones**:
 ```bash
-# Probar curl manual
 curl -I http://192.168.1.100:8080
-
-# Revisar detección de puertos
-docker-compose logs scanner | grep "port\|service"
+# Revisa consola del scanner/API (terminal donde corre) para ver detección de puertos
 
 # Forzar escaneo con port scan habilitado
 curl -X POST http://localhost:3001/scanner/scan-now \
@@ -141,12 +120,8 @@ curl -X POST http://localhost:3001/scanner/scan-now \
 
 **Soluciones**:
 ```bash
-# Opción 1: Reiniciar contenedores
-docker-compose restart api scanner
-
-# Opción 2: Reset completo (ADVERTENCIA: borra datos)
-docker-compose down -v
-docker-compose up -d
+# Reset BD (borra datos)
+rm -rf data/indexer.db
 npm run db:migrate
 ```
 
@@ -162,12 +137,7 @@ npm run db:migrate
 ```bash
 # Regenerar hash de contraseña
 npm run scripts:hash-password admin
-
-# Actualizar .env
-AUTH_ADMIN_PASSWORD_HASH=$(npm run scripts:hash-password admin | tail -1)
-
-# Reiniciar API
-docker-compose restart api
+# Pega el hash en AUTH_ADMIN_PASSWORD_HASH del .env y reinicia la API (Ctrl+C y npm run -w apps/api dev)
 ```
 
 ### Puerto en uso
@@ -176,12 +146,12 @@ docker-compose restart api
 
 **Soluciones**:
 ```bash
-# Cambiar puerto en docker-compose.yml
-# Cambiar de: "3001:3001" a "3002:3001"
-
-# O matar proceso existente
-lsof -i :3001
-kill -9 <PID>
+## Cambiar puertos
+- Edita `.env` (API_PORT/VITE_PORT)
+- O mata el proceso existente (Windows):
+  ```powershell
+  Get-NetTCPConnection -LocalPort 3001 | Select-Object -Expand OwningProcess | % { Stop-Process -Id $_ -Force }
+  ```
 ```
 
 ## Performance Tuning

@@ -17,32 +17,52 @@ Inventario de red para tu homelab. Escanea dispositivos, detecta servicios, y te
 - **Base de datos**: SQLite (archivo local, nada de instalar MySQL ni PostgreSQL)
 - **Scanner**: Script que corre en background
 
-## Instalación rápida
+## Instalación (paso a paso)
 
+1) Clonar y entrar al proyecto
 ```bash
-# Clonar
 git clone https://github.com/MutenRos/HomeLab-Indexer.git
 cd HomeLab-Indexer
+```
 
-# Instalar dependencias
+2) Instalar dependencias
+```bash
 npm install
+```
 
-# Configurar (opcional)
-cp .env.example .env
-# Edita .env y ajusta subnets si no usas 192.168.1.0/24
+3) Configurar variables de entorno
+```bash
+cp .env.example .env          # Backend/Scanner
+echo VITE_API_URL=http://localhost:3001 > apps/ui/.env   # Frontend
+```
 
-# Arrancar todo (API + UI + Scanner)
+4) Preparar base de datos
+```bash
+npm run db:migrate
+```
+
+5) Arrancar en desarrollo (API + UI + Scanner)
+```bash
 npm run dev
 ```
 
-La UI estará en http://localhost:5173 y la API en http://localhost:3001.
+6) Abrir la app
+- UI: http://localhost:5173
+- API: http://localhost:3001/health
+
+Nota Windows: si Vite se cierra solo en PowerShell, abre un CMD y ejecuta:
+```bat
+cd apps\ui
+npm run dev
+```
+o usa el script `start-ui.bat` que está en la raíz.
 
 ### Docker
 
-El soporte de Docker/Compose se ha movido a la rama `docker-support` para mantener `main` ligero para desarrollo local.
+El soporte Docker/Compose vive en la rama `docker-support`.
 
 - Rama: https://github.com/MutenRos/HomeLab-Indexer/tree/docker-support
-- Instrucciones Docker allí en `README.md` y `docs/*`.
+- Allí encontrarás `docker-compose.yml` y guía de despliegue.
 
 ## Configuración
 
@@ -88,6 +108,8 @@ packages/
 └── shared/      # Types compartidos
 
 infra/
+└── migrations/  # SQL migrations
+```
 
 ## Importar reservas DHCP
 

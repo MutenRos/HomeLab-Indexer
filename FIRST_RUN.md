@@ -1,41 +1,8 @@
-# 🚀 First Run Guide - HomeLab Indexer
+# 🚀 Guía de Primer Uso (Local) - HomeLab Indexer
 
-## Opción A: Docker Compose (Recomendado - 2 minutos)
+Nota: El despliegue con Docker/Compose vive en la rama `docker-support`. Esta guía es para desarrollo local en `main`.
 
-### Paso 1: Configuración
-```bash
-cd "C:\Users\freak\Homelab Indexer"
-cp .env.example .env
-```
-
-### Paso 2: Iniciar
-```bash
-docker-compose up -d
-```
-
-### Paso 3: Esperar a que esté listo (30-60 segundos)
-```bash
-# Verificar que API está corriendo
-curl http://localhost:3001/health
-
-# Debería responder con:
-# {"status":"ok","timestamp":"2025-12-23T...","version":"0.1.0",...}
-```
-
-### Paso 4: Abrir la UI
-- **URL**: http://localhost:5173
-- Deberías ver el dashboard home con buscador
-
-### Paso 5: Disparar primer escaneo
-1. Ir a **Settings** en la UI
-2. Click **"🔍 Scan Network Now"**
-3. Esperar 1-5 minutos (según tamaño de tu red)
-4. Volver a **Home** - deberías ver tiles con dispositivos descubiertos
-5. Click en cualquier tile para acceder al servicio
-
----
-
-## Opción B: Local Development (5 minutos)
+## Pasos rápidos (5 minutos)
 
 ### Paso 1: Instalar dependencias
 ```bash
@@ -48,25 +15,17 @@ npm install
 npm run db:migrate
 ```
 
-### Paso 3: Iniciar servicios (en 3 terminales)
-
-**Terminal 1 - API**
+### Paso 3: Iniciar servicios
 ```bash
-npm run -w apps/api dev
-# Debería mostrar: 🚀 API running on http://0.0.0.0:3001
+npm run dev
 ```
 
-**Terminal 2 - UI**
-```bash
-npm run -w apps/ui dev
-# Debería mostrar: ➜  Local:   http://localhost:5173
+Windows: si Vite (UI) se cierra en PowerShell, abre un CMD aparte:
+```bat
+cd apps\ui
+npm run dev
 ```
-
-**Terminal 3 - Scanner**
-```bash
-npm run -w apps/scanner dev
-# Debería mostrar: 🚀 Scanner service started (interval: 30min, subnets: 192.168.1.0/24)
-```
+o usa el script `start-ui.bat` desde la raíz del repo.
 
 ### Paso 4: Verificar todo está corriendo
 - API: http://localhost:3001/health
@@ -234,12 +193,9 @@ ping 192.168.1.254
 
 **Causa 3: Scanner no está corriendo**
 ```bash
-# En local development, verificar que tienes la Terminal 3 abierta
-# Revisar logs:
-docker-compose logs scanner
-
-# En docker, debería mostrar:
-# 🚀 Scanner service started (interval: 30min, subnets: 192.168.1.0/24)
+# Si usas `npm run dev`, el scanner inicia junto a la API.
+# Para lanzarlo por separado:
+npm run -w apps/scanner dev
 ```
 
 ### "Las URLs no abren los servicios"
@@ -249,8 +205,7 @@ docker-compose logs scanner
 # Verificar servicios:
 curl http://localhost:3001/services
 
-# Si está vacío, verificar logs del scanner:
-docker-compose logs scanner
+# Si está vacío, revisa la consola de la API/Scanner (terminal donde corre)
 
 # El scanner debería detectar puertos comunes: 80, 443, 22, 3000, 8080, etc
 ```
@@ -259,11 +214,7 @@ docker-compose logs scanner
 
 **Solución (borra todo)**:
 ```bash
-# Docker
-docker-compose down -v
-docker-compose up -d
-
-# O local
+# Reset local (borra BD)
 rm -rf data/indexer.db
 npm run db:migrate
 ```
@@ -272,7 +223,7 @@ npm run db:migrate
 
 ## Próximo: Personalizarlo
 
-1. **Cambiar puerto**: Editar `docker-compose.yml` o `.env`
+1. **Cambiar puerto**: Editar `.env` (API_PORT/VITE_PORT)
 2. **Cambiar LOGO**: Editar `apps/ui/src/App.tsx` (la emoji 🏠)
 3. **Agregar validación**: Mejorar `apps/api/src/scanner/scanner.ts`
 4. **Alertas**: Implementar webhooks en `apps/api/src/routes/alerts.ts`

@@ -1,5 +1,8 @@
 # Quick Integration Guide
 
+> Nota: Si quieres desplegar con Docker/Compose, usa la rama `docker-support`.
+> En `main`, asume ejecución local con `npm run dev`.
+
 ## Architecture Overview
 
 HomeLab Indexer es un sistema modular pero integrado que funciona así:
@@ -118,15 +121,7 @@ Scanner y API comparten misma BD
 - `infra/migrations/*.sql` - DB schema
 - `packages/shared/src/index.ts` - Shared types
 
-## Running Everything
-
-### Option 1: Docker Compose (Recommended)
-```bash
-docker-compose up -d
-# Acceder: http://localhost:5173
-```
-
-### Option 2: Local Development
+## Running Everything (Local)
 ```bash
 npm install
 npm run db:migrate
@@ -171,7 +166,7 @@ npm run dev
 **Scanner no encuentra hosts:**
 - Verificar subnets en `.env`
 - Probar ping manual: `ping 192.168.1.1`
-- Revisar logs: `docker-compose logs scanner`
+- Revisar consola donde corre el scanner/API
 
 **UI no ve servicios:**
 - Verificar API en http://localhost:3001/services
@@ -179,8 +174,7 @@ npm run dev
 - Revisar CORS en API (debería estar permitido para UI origin)
 
 **BD corrupta:**
-- `docker-compose down -v` (borra BD)
-- `docker-compose up -d`
+- `rm -rf data/indexer.db`
 - `npm run db:migrate` (recrea schema)
 
 ---
