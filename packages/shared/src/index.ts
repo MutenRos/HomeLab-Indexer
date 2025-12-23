@@ -2,6 +2,10 @@
  * Shared Types & Interfaces
  */
 
+// Re-export utilities
+export { createLogger, type Logger } from './logger';
+export { createApiClient } from './http-client';
+
 // Device Model
 export interface Device {
   device_id: string;

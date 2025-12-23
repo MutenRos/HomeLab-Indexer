@@ -1,5 +1,10 @@
 # HomeLab Indexer
 
+[![CI](https://github.com/MutenRos/HomeLab-Indexer/workflows/CI/badge.svg)](https://github.com/MutenRos/HomeLab-Indexer/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+
 Inventario de red para tu homelab. Escanea dispositivos, detecta servicios, y te muestra todo en un dashboard sin complicaciones.
 
 ## ¿Qué hace?
@@ -157,15 +162,13 @@ No hay migraciones automáticas. Si actualizas y hay cambios en el schema, borra
 **¿Docker?**
 - Usar la rama `docker-support` si quieres Compose.
 
-## TODOs / Ideas
+## Contribuir
 
-- [ ] Notificaciones (webhooks, email, Telegram)
-- [ ] Gráficos de uptime
-- [ ] Detección de cambios de IP
-- [ ] Agrupación por VLANs
-- [ ] Dark mode
+¿Quieres mejorar el proyecto? Revisa [CONTRIBUTING.md](CONTRIBUTING.md) para guías de desarrollo.
 
 ## Licencia
+
+MIT — Ve [LICENSE](LICENSE) para detalles.
 
 MIT. Haz lo que quieras con esto.
 

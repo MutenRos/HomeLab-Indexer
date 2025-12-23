@@ -1,25 +1,34 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 pnpm-lock.yaml
+.pnp/
+.pnp.js
 
 # Build
 dist/
 build/
+out/
 *.tsbuildinfo
+.next/
+.nuxt/
+.vuepress/dist
 
 # Environment
 .env
 .env.local
 .env.*.local
 .env.production
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
 /data
+*.db-journal
 
 # IDE
 .vscode/
@@ -28,6 +37,8 @@ build/
 *.swo
 *~
 .DS_Store
+*.sublime-project
+*.sublime-workspace
 
 # Logs
 logs/
@@ -35,10 +46,41 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
 
 # Testing
 coverage/
 .nyc_output/
+*.lcov
+.jest/
 
 # Docker
 .dockerignore
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Runtime
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Optional
+.npm
+.eslintcache
+.node_repl_history
+.yarn-integrity
