@@ -145,7 +145,6 @@ No hay migraciones automáticas. Si actualizas y hay cambios en el schema, borra
 
 - [ ] Notificaciones (webhooks, email, Telegram)
 - [ ] Gráficos de uptime
-- [ ] Exportar a Prometheus
 - [ ] Detección de cambios de IP
 - [ ] Agrupación por VLANs
 - [ ] Dark mode
@@ -155,4 +154,3 @@ No hay migraciones automáticas. Si actualizas y hay cambios en el schema, borra
 MIT. Haz lo que quieras con esto.
 
 
-**Hecho con ❤️ para los entusiastas del homelabbing**
