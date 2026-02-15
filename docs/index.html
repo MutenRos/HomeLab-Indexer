@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HomeLab Indexer — automatic network inventory and service catalog for your homelab">
+  <meta name="theme-color" content="#667eea">
+  <title>HomeLab Indexer</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: #f7fafc; color: #333; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    code { font-family: 'Fira Code', 'Consolas', monospace; background: rgba(0,0,0,.06); padding: 2px 6px; border-radius: 4px; font-size: .9em; }
+
+    /* ===== HEADER ===== */
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem 2rem; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.15); position: sticky; top: 0; z-index: 1000; }
+    .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -.5px; margin-bottom: 1rem; }
+    .nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .nav a { color: #fff; padding: .6rem 1.2rem; border-radius: 8px; font-weight: 600; background: rgba(255,255,255,.1); transition: background .3s, transform .3s; }
+    .nav a:hover, .nav a.active { background: rgba(255,255,255,.25); transform: translateY(-2px); }
+    .nav a.active { background: #fff; color: #667eea; }
+    .nav a:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+    /* ===== LAYOUT ===== */
+    .main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== HERO ===== */
+    .hero { text-align: center; margin-bottom: 3rem; padding: 3rem 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; color: #fff; box-shadow: 0 8px 24px rgba(102,126,234,.3); }
+    .hero h2 { font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; opacity: .95; }
+
+    /* ===== STATS ===== */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px,1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+    .stat-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,.1); display: flex; align-items: center; gap: 1rem; transition: transform .3s, box-shadow .3s; }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+    .stat-card.devices { border-left: 5px solid #667eea; }
+    .stat-card.services { border-left: 5px solid #f093fb; }
+    .stat-card.ips { border-left: 5px solid #4facfe; }
+    .stat-card.actions { border-left: 5px solid #43e97b; flex-direction: column; align-items: flex-start; }
+    .stat-icon { font-size: 3rem; }
+    .stat-value { font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: .5rem; }
+    .stat-label { font-size: .95rem; color: #666; font-weight: 600; }
+    .stat-sub { font-size: .85rem; color: #999; }
+
+    /* ===== BUTTONS ===== */
+    .btn { display: inline-block; padding: .6rem 1.4rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: .95rem; transition: all .3s; }
+    .btn-primary { background: #667eea; color: #fff; }
+    .btn-primary:hover { background: #5a6fd6; }
+    .btn-secondary { background: #edf2f7; color: #667eea; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-success { background: #48bb78; color: #fff; }
+    .btn-success:hover { background: #38a169; }
+
+    /* ===== SERVICES ===== */
+    .section-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .section-header h2 { font-size: 1.5rem; }
+    .search-box input { padding: .7rem 1.2rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; width: 340px; max-width: 100%; transition: border-color .3s; }
+    .search-box input:focus { outline: none; border-color: #667eea; }
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 1.5rem; }
+    .service-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,.1); display: flex; gap: 1rem; transition: transform .3s; }
+    .service-card:hover { transform: translateY(-3px); }
+    .svc-icon { font-size: 2.5rem; }
+    .svc-content { flex: 1; }
+    .svc-content h3 { margin-bottom: .5rem; }
+    .svc-meta { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .85rem; color: #666; margin-bottom: .5rem; }
+    .access-link { color: #667eea; font-weight: 600; }
+    .access-link:hover { text-decoration: underline; }
+
+    /* ===== INVENTORY ===== */
+    .inventory-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .inventory-header h2 { font-size: 1.8rem; }
+    .view-toggle { display: flex; gap: .5rem; }
+    .view-toggle button { padding: .5rem 1rem; border: 2px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; font-weight: 600; transition: all .2s; }
+    .view-toggle button.active { background: #667eea; color: #fff; border-color: #667eea; }
+    .filter-bar { display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; }
+    .filter-bar input { flex: 1; padding: .7rem 1.2rem; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; }
+    .filter-bar input:focus { outline: none; border-color: #667eea; }
+    .filter-count { font-size: .9rem; color: #666; white-space: nowrap; }
+
+    .devices-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px,1fr)); gap: 1.5rem; }
+    .device-card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,.1); cursor: pointer; transition: transform .3s, box-shadow .3s; border-left: 4px solid #48bb78; }
+    .device-card.offline { border-left-color: #fc8181; }
+    .device-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .card-head h3 { font-size: 1.1rem; }
+    .badge { padding: .25rem .75rem; border-radius: 20px; font-size: .8rem; font-weight: 600; }
+    .badge-online { background: #c6f6d5; color: #276749; }
+    .badge-offline { background: #fed7d7; color: #9b2c2c; }
+    .info-row { display: flex; justify-content: space-between; padding: .4rem 0; font-size: .9rem; border-bottom: 1px solid #f0f0f0; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #666; }
+    .ip-tag { display: inline-block; background: #ebf8ff; color: #2b6cb0; padding: 2px 8px; border-radius: 4px; font-size: .8rem; margin: 2px; }
+    .svc-tag { display: inline-block; background: #faf5ff; color: #6b46c1; padding: 2px 8px; border-radius: 4px; font-size: .8rem; margin: 2px; }
+
+    /* ===== TABLE VIEW ===== */
+    .devices-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .devices-table th { background: #667eea; color: #fff; padding: .8rem 1rem; text-align: left; font-size: .9rem; }
+    .devices-table td { padding: .8rem 1rem; border-bottom: 1px solid #f0f0f0; font-size: .9rem; }
+    .devices-table tr:hover { background: #f7fafc; }
+    .devices-table tr { cursor: pointer; }
+
+    /* ===== ALERTS ===== */
+    .alerts-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .filter-tabs { display: flex; gap: .5rem; margin-bottom: 2rem; }
+    .filter-tabs button { padding: .5rem 1.2rem; border: 2px solid #e2e8f0; border-radius: 8px; background: #fff; cursor: pointer; font-weight: 600; transition: all .2s; }
+    .filter-tabs button.active { background: #667eea; color: #fff; border-color: #667eea; }
+    .alert-card { display: flex; gap: 1rem; align-items: flex-start; background: #fff; border-radius: 12px; padding: 1.2rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 4px solid #ccc; margin-bottom: 1rem; transition: transform .2s; }
+    .alert-card:hover { transform: translateX(4px); }
+    .alert-card.unread { background: #fffdf5; }
+    .alert-icon { font-size: 2rem; }
+    .alert-content { flex: 1; }
+    .alert-content h3 { font-size: 1rem; margin-bottom: .3rem; }
+    .alert-content p { font-size: .9rem; color: #666; margin-bottom: .5rem; }
+    .alert-meta { display: flex; gap: 1rem; flex-wrap: wrap; font-size: .8rem; color: #888; }
+    .alert-type-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: .75rem; font-weight: 700; color: #fff; }
+    .ack-btn { background: none; border: 2px solid #48bb78; color: #48bb78; border-radius: 8px; padding: .4rem .8rem; cursor: pointer; font-weight: 700; transition: all .2s; align-self: center; }
+    .ack-btn:hover { background: #48bb78; color: #fff; }
+
+    /* ===== SETTINGS ===== */
+    .settings-card { background: #fff; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,.1); max-width: 600px; }
+    .settings-card h2 { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+    .settings-card > p { color: #666; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: .5rem; }
+    .form-group textarea { width: 100%; padding: .7rem; border: 2px solid #e2e8f0; border-radius: 8px; font-family: 'Consolas', monospace; font-size: .95rem; resize: vertical; }
+    .form-group textarea:focus { outline: none; border-color: #667eea; }
+    .form-group small { display: block; color: #999; margin-top: .3rem; font-size: .85rem; }
+    .scan-result { margin-top: 1.5rem; padding: 1rem; border-radius: 10px; display: flex; align-items: center; gap: 1rem; }
+    .scan-result.started { background: #c6f6d5; }
+    .scan-result.complete { background: #ebf8ff; }
+
+    /* ===== DETAIL ===== */
+    .detail-back { margin-bottom: 1.5rem; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+    .detail-box { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .detail-box label { font-weight: 600; color: #666; font-size: .85rem; display: block; margin-bottom: .3rem; }
+    .detail-box .val { font-size: 1.1rem; }
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content: ''; position: absolute; left: .5rem; top: 0; bottom: 0; width: 3px; background: #e2e8f0; border-radius: 3px; }
+    .tl-item { position: relative; margin-bottom: 1.5rem; padding-left: 1.5rem; }
+    .tl-item::before { content: ''; position: absolute; left: -1.2rem; top: .3rem; width: 12px; height: 12px; border-radius: 50%; background: #667eea; border: 3px solid #fff; box-shadow: 0 0 0 2px #667eea; }
+    .tl-item h4 { font-size: .95rem; }
+    .tl-item p { font-size: .85rem; color: #666; }
+
+    /* ===== FOOTER ===== */
+    .footer { text-align: center; padding: 2rem; color: #999; font-size: .85rem; border-top: 1px solid #e2e8f0; margin-top: 3rem; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .header { padding: 1rem; }
+      .header h1 { font-size: 1.5rem; }
+      .nav a { padding: .5rem .8rem; font-size: .9rem; }
+      .hero h2 { font-size: 2rem; }
+      .main { padding: 1rem; }
+      .search-box input { width: 100%; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .devices-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="header">
+  <h1>🏠 HomeLab Indexer</h1>
+  <nav class="nav" aria-label="Main navigation">
+    <a href="#home" class="active" data-page="home" aria-label="Go to dashboard home">Home</a>
+    <a href="#inventory" data-page="inventory" aria-label="View network device inventory">Inventory</a>
+    <a href="#alerts" data-page="alerts" aria-label="View alerts and events">Alerts</a>
+    <a href="#settings" data-page="settings" aria-label="Configure scanner settings">Settings</a>
+  </nav>
+</header>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main">
+
+  <!-- ========== HOME PAGE ========== -->
+  <section id="home" class="page active">
+    <div class="hero">
+      <h2>🏠 HomeLab Dashboard</h2>
+      <p>Network discovery &amp; service access in one place</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card devices">
+        <div class="stat-icon">📱</div>
+        <div>
+          <div class="stat-value">12</div>
+          <div class="stat-label">Total Devices</div>
+          <div class="stat-sub">9 online</div>
+        </div>
+      </div>
+      <div class="stat-card services">
+        <div class="stat-icon">⚡</div>
+        <div>
+          <div class="stat-value">27</div>
+          <div class="stat-label">Services</div>
+          <div class="stat-sub">Detected &amp; indexed</div>
+        </div>
+      </div>
+      <div class="stat-card ips">
+        <div class="stat-icon">🌐</div>
+        <div>
+          <div class="stat-value">14</div>
+          <div class="stat-label">IP Addresses</div>
+          <div class="stat-sub">Unique hosts</div>
+        </div>
+      </div>
+      <div class="stat-card actions">
+        <div class="stat-icon">🚀</div>
+        <div>
+          <div class="stat-label">Quick Actions</div>
+          <button class="btn btn-primary" onclick="showPage('inventory')" style="margin-top:.5rem">View Inventory</button>
+          <button class="btn btn-secondary" onclick="showPage('settings')" style="margin-top:.4rem">Scan Network</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2>🔗 Quick Access Services</h2>
+      <div class="search-box">
+        <input type="search" placeholder="🔍 Search services by name, IP, or type..." aria-label="Search detected network services" id="serviceSearch">
+      </div>
+    </div>
+
+    <div class="services-grid" id="servicesGrid">
+      <!-- Services rendered by JS -->
+    </div>
+  </section>
+
+  <!-- ========== INVENTORY PAGE ========== -->
+  <section id="inventory" class="page">
+    <div class="inventory-header">
+      <div>
+        <h2>📋 Network Inventory</h2>
+        <p style="color:#666" id="deviceCount">12 devices detected</p>
+      </div>
+      <div class="view-toggle">
+        <button class="active" id="btnCard" onclick="setView('card')">🃏 Card View</button>
+        <button id="btnTable" onclick="setView('table')">📊 Table View</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" placeholder="🔍 Filter by hostname, MAC, vendor, or ID..." id="deviceFilter" aria-label="Filter devices">
+      <span class="filter-count" id="filterCount">12 results</span>
+    </div>
+    <div class="devices-grid" id="devicesCardView">
+      <!-- Rendered by JS -->
+    </div>
+    <table class="devices-table" id="devicesTableView" style="display:none">
+      <thead>
+        <tr><th>Status</th><th>Hostname</th><th>MAC Address</th><th>IP Address</th><th>Vendor</th><th>Services</th><th>Last Seen</th></tr>
+      </thead>
+      <tbody id="devicesTableBody"></tbody>
+    </table>
+  </section>
+
+  <!-- ========== ALERTS PAGE ========== -->
+  <section id="alerts" class="page">
+    <div class="alerts-header">
+      <div>
+        <h2>⚠️ Alerts &amp; Events</h2>
+        <p style="color:#666" id="alertSummary">18 total events · 4 unread</p>
+      </div>
+      <button class="btn btn-success" id="ackAllBtn">✅ Acknowledge All (4)</button>
+    </div>
+    <div class="filter-tabs">
+      <button class="active" id="tabAll" onclick="setAlertFilter('all')">All Alerts (18)</button>
+      <button id="tabUnread" onclick="setAlertFilter('unread')">Unread (4)</button>
+    </div>
+    <div id="alertsList">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+  <!-- ========== SETTINGS PAGE ========== -->
+  <section id="settings" class="page">
+    <h2 style="font-size:1.8rem;margin-bottom:1rem">⚙️ Settings</h2>
+    <p style="color:#666;margin-bottom:2rem">Configure network scanning and preferences</p>
+
+    <div class="settings-card">
+      <h2>🔍 Network Scanner</h2>
+      <p>Configure and trigger network discovery</p>
+      <div class="form-group">
+        <label for="subnets">Subnets to Scan</label>
+        <textarea id="subnets" rows="4">192.168.1.0/24, 192.168.50.0/24</textarea>
+        <small>Comma-separated list of CIDR subnets</small>
+      </div>
+      <button class="btn btn-primary" id="scanBtn" onclick="triggerScan()">🚀 Start Network Scan</button>
+      <div id="scanResult" class="scan-result started" style="display:none">
+        <span style="font-size:1.5rem">✅</span>
+        <div><strong>Scan Started</strong><p>Scan ID: <code>scan:1703345678901</code></p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== DEVICE DETAIL PAGE ========== -->
+  <section id="detail" class="page">
+    <div class="detail-back"><button class="btn btn-secondary" onclick="showPage('inventory')">← Back to Inventory</button></div>
+    <div id="detailContent">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <p>HomeLab Indexer v0.1.0 · Automatic network inventory for homelabs · <a href="https://github.com/MutenRos/HomeLab-Indexer" target="_blank" style="color:#667eea">GitHub</a></p>
+</footer>
+
+<script>
+/* ==================== MOCK DATA ==================== */
+const DEVICES = [
+  { device_id: "mac:e4:ab:89:28:8b:0b", mac: "E4:AB:89:28:8B:0B", hostname: "tp-link-router", vendor: "TP-Link Router", first_seen: "2025-01-10T08:12:00Z", last_seen: new Date(Date.now() - 60000).toISOString(), leases: [{ ip: "192.168.1.1" }], services: [{ kind: "HTTP", port: 80 }, { kind: "HTTPS", port: 443 }] },
+  { device_id: "mac:bc:24:11:aa:bb:cc", mac: "BC:24:11:AA:BB:CC", hostname: "raspberry-pi4", vendor: "Broadcom (Raspberry Pi)", first_seen: "2025-01-10T08:15:00Z", last_seen: new Date(Date.now() - 30000).toISOString(), leases: [{ ip: "192.168.1.50" }], services: [{ kind: "SSH", port: 22 }, { kind: "HTTP", port: 3000 }, { kind: "Docker", port: 9000 }] },
+  { device_id: "mac:00:0c:29:dd:ee:ff", mac: "00:0C:29:DD:EE:FF", hostname: "ubuntu-server", vendor: "VMware", first_seen: "2025-01-11T14:30:00Z", last_seen: new Date(Date.now() - 120000).toISOString(), leases: [{ ip: "192.168.1.100" }], services: [{ kind: "SSH", port: 22 }, { kind: "PostgreSQL", port: 5432 }, { kind: "Redis", port: 6379 }, { kind: "HTTP", port: 8080 }] },
+  { device_id: "mac:08:00:27:11:22:33", mac: "08:00:27:11:22:33", hostname: "devbox-vbox", vendor: "VirtualBox", first_seen: "2025-01-12T09:00:00Z", last_seen: new Date(Date.now() - 90000).toISOString(), leases: [{ ip: "192.168.1.101" }], services: [{ kind: "SSH", port: 22 }, { kind: "Vite Dev", port: 5173 }] },
+  { device_id: "mac:52:54:00:44:55:66", mac: "52:54:00:44:55:66", hostname: "qemu-kvm-node", vendor: "QEMU", first_seen: "2025-01-12T10:00:00Z", last_seen: new Date(Date.now() - 45000).toISOString(), leases: [{ ip: "192.168.1.102" }], services: [{ kind: "MySQL", port: 3306 }, { kind: "HTTP", port: 8000 }] },
+  { device_id: "mac:a4:12:69:77:88:99", mac: "A4:12:69:77:88:99", hostname: "macbook-pro", vendor: "Apple", first_seen: "2025-01-10T12:00:00Z", last_seen: new Date(Date.now() - 20000).toISOString(), leases: [{ ip: "192.168.1.30" }], services: [{ kind: "SSH", port: 22 }] },
+  { device_id: "mac:58:20:59:aa:00:11", mac: "58:20:59:AA:00:11", hostname: "google-nest-hub", vendor: "Google Nest", first_seen: "2025-01-13T16:30:00Z", last_seen: new Date(Date.now() - 15000).toISOString(), leases: [{ ip: "192.168.1.40" }], services: [{ kind: "HTTP", port: 8008 }] },
+  { device_id: "mac:00:50:f2:bb:cc:dd", mac: "00:50:F2:BB:CC:DD", hostname: "hyperv-host", vendor: "Hyper-V", first_seen: "2025-01-14T08:00:00Z", last_seen: new Date(Date.now() - 200000).toISOString(), leases: [{ ip: "192.168.1.110" }], services: [{ kind: "SSH", port: 22 }, { kind: "MongoDB", port: 27017 }] },
+  { device_id: "mac:54:27:58:ee:ff:00", mac: "54:27:58:EE:FF:00", hostname: "intel-nuc", vendor: "Intel", first_seen: "2025-01-15T10:00:00Z", last_seen: new Date(Date.now() - 50000).toISOString(), leases: [{ ip: "192.168.1.60" }], services: [{ kind: "SSH", port: 22 }, { kind: "Portainer", port: 9000 }, { kind: "Elasticsearch", port: 9200 }] },
+  { device_id: "mac:d4:6e:0e:11:22:33", mac: "D4:6E:0E:11:22:33", hostname: "ipad-air", vendor: "Apple", first_seen: "2025-01-16T18:00:00Z", last_seen: new Date(Date.now() - 600000).toISOString(), leases: [{ ip: "192.168.1.35" }], services: [] },
+  { device_id: "mac:00:12:17:cc:dd:ee", mac: "00:12:17:CC:DD:EE", hostname: "cisco-switch", vendor: "Cisco", first_seen: "2025-01-10T08:10:00Z", last_seen: new Date(Date.now() - 40000).toISOString(), leases: [{ ip: "192.168.1.2" }], services: [{ kind: "HTTPS", port: 443 }, { kind: "SSH", port: 22 }] },
+  { device_id: "mac:00:07:ab:ff:00:11", mac: "00:07:AB:FF:00:11", hostname: "samsung-tv", vendor: "Samsung", first_seen: "2025-01-17T20:00:00Z", last_seen: new Date(Date.now() - 3600000).toISOString(), leases: [{ ip: "192.168.1.45" }], services: [{ kind: "HTTP", port: 8001 }] },
+];
+
+const SERVICES = [
+  { service_id: "svc:1", device_id: "mac:e4:ab:89:28:8b:0b", ip: "192.168.1.1", port: 80, protocol: "tcp", kind: "HTTP", url: "http://192.168.1.1", title: "TP-Link Admin Panel" },
+  { service_id: "svc:2", device_id: "mac:bc:24:11:aa:bb:cc", ip: "192.168.1.50", port: 22, protocol: "tcp", kind: "SSH", url: null, title: "OpenSSH 8.9" },
+  { service_id: "svc:3", device_id: "mac:bc:24:11:aa:bb:cc", ip: "192.168.1.50", port: 3000, protocol: "tcp", kind: "HTTP", url: "http://192.168.1.50:3000", title: "Grafana Dashboard" },
+  { service_id: "svc:4", device_id: "mac:bc:24:11:aa:bb:cc", ip: "192.168.1.50", port: 9000, protocol: "tcp", kind: "Docker", url: "http://192.168.1.50:9000", title: "Portainer CE" },
+  { service_id: "svc:5", device_id: "mac:00:0c:29:dd:ee:ff", ip: "192.168.1.100", port: 5432, protocol: "tcp", kind: "PostgreSQL", url: null, title: "PostgreSQL 15" },
+  { service_id: "svc:6", device_id: "mac:00:0c:29:dd:ee:ff", ip: "192.168.1.100", port: 6379, protocol: "tcp", kind: "Redis", url: null, title: "Redis 7.2" },
+  { service_id: "svc:7", device_id: "mac:00:0c:29:dd:ee:ff", ip: "192.168.1.100", port: 8080, protocol: "tcp", kind: "HTTP", url: "http://192.168.1.100:8080", title: "Jenkins CI" },
+  { service_id: "svc:8", device_id: "mac:52:54:00:44:55:66", ip: "192.168.1.102", port: 3306, protocol: "tcp", kind: "MySQL", url: null, title: "MySQL 8.0" },
+  { service_id: "svc:9", device_id: "mac:52:54:00:44:55:66", ip: "192.168.1.102", port: 8000, protocol: "tcp", kind: "HTTP", url: "http://192.168.1.102:8000", title: "Django Admin" },
+  { service_id: "svc:10", device_id: "mac:54:27:58:ee:ff:00", ip: "192.168.1.60", port: 9200, protocol: "tcp", kind: "Elasticsearch", url: "http://192.168.1.60:9200", title: "Elasticsearch 8.11" },
+  { service_id: "svc:11", device_id: "mac:54:27:58:ee:ff:00", ip: "192.168.1.60", port: 9000, protocol: "tcp", kind: "Portainer", url: "http://192.168.1.60:9000", title: "Portainer Agent" },
+  { service_id: "svc:12", device_id: "mac:08:00:27:11:22:33", ip: "192.168.1.101", port: 5173, protocol: "tcp", kind: "Vite Dev", url: "http://192.168.1.101:5173", title: "HomeLab Indexer UI" },
+];
+
+const ALERTS = [
+  { event_id: "evt:1", timestamp: new Date(Date.now() - 3600000).toISOString(), type: "new_device", device_id: "mac:00:07:ab:ff:00:11", ip: "192.168.1.45", mac: "00:07:AB:FF:00:11", title: "New device detected", description: "samsung-tv (192.168.1.45) detected on network", acknowledged: false },
+  { event_id: "evt:2", timestamp: new Date(Date.now() - 7200000).toISOString(), type: "service_found", device_id: "mac:54:27:58:ee:ff:00", ip: "192.168.1.60", mac: null, title: "New service found", description: "Elasticsearch 8.11 on port 9200", acknowledged: false },
+  { event_id: "evt:3", timestamp: new Date(Date.now() - 14400000).toISOString(), type: "ip_change", device_id: "mac:a4:12:69:77:88:99", ip: "192.168.1.30", mac: "A4:12:69:77:88:99", title: "IP address changed", description: "macbook-pro changed from 192.168.1.25 to 192.168.1.30", acknowledged: false },
+  { event_id: "evt:4", timestamp: new Date(Date.now() - 18000000).toISOString(), type: "device_offline", device_id: "mac:d4:6e:0e:11:22:33", ip: "192.168.1.35", mac: "D4:6E:0E:11:22:33", title: "Device went offline", description: "ipad-air has not responded for 5 minutes", acknowledged: false },
+  { event_id: "evt:5", timestamp: new Date(Date.now() - 86400000).toISOString(), type: "new_device", device_id: "mac:54:27:58:ee:ff:00", ip: "192.168.1.60", mac: "54:27:58:EE:FF:00", title: "New device detected", description: "intel-nuc (192.168.1.60) detected on network", acknowledged: true },
+  { event_id: "evt:6", timestamp: new Date(Date.now() - 86400000*2).toISOString(), type: "service_found", device_id: "mac:bc:24:11:aa:bb:cc", ip: "192.168.1.50", mac: null, title: "New service found", description: "Portainer CE on port 9000", acknowledged: true },
+  { event_id: "evt:7", timestamp: new Date(Date.now() - 86400000*2).toISOString(), type: "device_online", device_id: "mac:00:50:f2:bb:cc:dd", ip: "192.168.1.110", mac: "00:50:F2:BB:CC:DD", title: "Device back online", description: "hyperv-host is responding again", acknowledged: true },
+  { event_id: "evt:8", timestamp: new Date(Date.now() - 86400000*3).toISOString(), type: "new_device", device_id: "mac:08:00:27:11:22:33", ip: "192.168.1.101", mac: "08:00:27:11:22:33", title: "New device detected", description: "devbox-vbox (192.168.1.101) detected on network", acknowledged: true },
+  { event_id: "evt:9", timestamp: new Date(Date.now() - 86400000*3).toISOString(), type: "service_found", device_id: "mac:00:0c:29:dd:ee:ff", ip: "192.168.1.100", mac: null, title: "New service found", description: "Jenkins CI on port 8080", acknowledged: true },
+  { event_id: "evt:10", timestamp: new Date(Date.now() - 86400000*4).toISOString(), type: "ip_change", device_id: "mac:bc:24:11:aa:bb:cc", ip: "192.168.1.50", mac: "BC:24:11:AA:BB:CC", title: "IP address changed", description: "raspberry-pi4 changed from 192.168.1.51 to 192.168.1.50", acknowledged: true },
+  { event_id: "evt:11", timestamp: new Date(Date.now() - 86400000*4).toISOString(), type: "new_device", device_id: "mac:52:54:00:44:55:66", ip: "192.168.1.102", mac: "52:54:00:44:55:66", title: "New device detected", description: "qemu-kvm-node (192.168.1.102) detected", acknowledged: true },
+  { event_id: "evt:12", timestamp: new Date(Date.now() - 86400000*5).toISOString(), type: "service_found", device_id: "mac:52:54:00:44:55:66", ip: "192.168.1.102", mac: null, title: "New service found", description: "MySQL 8.0 on port 3306", acknowledged: true },
+  { event_id: "evt:13", timestamp: new Date(Date.now() - 86400000*5).toISOString(), type: "new_device", device_id: "mac:00:0c:29:dd:ee:ff", ip: "192.168.1.100", mac: "00:0C:29:DD:EE:FF", title: "New device detected", description: "ubuntu-server (192.168.1.100) detected", acknowledged: true },
+  { event_id: "evt:14", timestamp: new Date(Date.now() - 86400000*5).toISOString(), type: "device_online", device_id: "mac:e4:ab:89:28:8b:0b", ip: "192.168.1.1", mac: "E4:AB:89:28:8B:0B", title: "Device back online", description: "tp-link-router is responding", acknowledged: true },
+  { event_id: "evt:15", timestamp: new Date(Date.now() - 86400000*6).toISOString(), type: "new_device", device_id: "mac:00:12:17:cc:dd:ee", ip: "192.168.1.2", mac: "00:12:17:CC:DD:EE", title: "New device detected", description: "cisco-switch (192.168.1.2) detected", acknowledged: true },
+  { event_id: "evt:16", timestamp: new Date(Date.now() - 86400000*6).toISOString(), type: "service_found", device_id: "mac:e4:ab:89:28:8b:0b", ip: "192.168.1.1", mac: null, title: "New service found", description: "HTTP Admin Panel on port 80", acknowledged: true },
+  { event_id: "evt:17", timestamp: new Date(Date.now() - 86400000*7).toISOString(), type: "new_device", device_id: "mac:e4:ab:89:28:8b:0b", ip: "192.168.1.1", mac: "E4:AB:89:28:8B:0B", title: "New device detected", description: "tp-link-router (192.168.1.1) detected on network", acknowledged: true },
+  { event_id: "evt:18", timestamp: new Date(Date.now() - 86400000*7).toISOString(), type: "new_device", device_id: "mac:bc:24:11:aa:bb:cc", ip: "192.168.1.50", mac: "BC:24:11:AA:BB:CC", title: "New device detected", description: "raspberry-pi4 (192.168.1.50) detected", acknowledged: true },
+];
+
+/* ==================== ICONS ==================== */
+const SVC_ICONS = { http:'🌐', https:'🔒', ssh:'💻', ftp:'📁', smb:'🗂️', mysql:'🗄️', postgresql:'🐘', redis:'⚡', mongodb:'🍃', docker:'🐳', portainer:'📦', vnc:'🖥️', elasticsearch:'🔎', 'vite dev':'⚡', 'node.js/express':'🟢' };
+const ALERT_ICONS = { new_device:'🆕', device_offline:'📴', device_online:'✅', ip_change:'🔄', service_found:'⚡', service_lost:'⚠️' };
+const ALERT_COLORS = { new_device:'#4caf50', device_offline:'#ff9800', device_online:'#2196f3', ip_change:'#9c27b0', service_found:'#00bcd4', service_lost:'#f44336' };
+
+function svcIcon(kind) { return SVC_ICONS[kind.toLowerCase()] || '⚙️'; }
+function isOnline(d) { return new Date(d.last_seen).getTime() > Date.now() - 300000; }
+function fmtDate(iso) { const d=new Date(iso); return d.toLocaleDateString()+' '+d.toLocaleTimeString(); }
+
+/* ==================== NAVIGATION ==================== */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  document.querySelectorAll('.nav a').forEach(a => a.classList.toggle('active', a.dataset.page === name));
+}
+
+document.querySelectorAll('.nav a').forEach(a => {
+  a.addEventListener('click', e => { e.preventDefault(); showPage(a.dataset.page); });
+});
+
+/* ==================== RENDER SERVICES (HOME) ==================== */
+function renderServices(filter='') {
+  const fl = filter.toLowerCase();
+  const filtered = SERVICES.filter(s =>
+    !fl || (s.title||'').toLowerCase().includes(fl) || s.kind.toLowerCase().includes(fl) || s.ip.includes(fl)
+  );
+  const grid = document.getElementById('servicesGrid');
+  grid.innerHTML = filtered.map(s => `
+    <div class="service-card">
+      <div class="svc-icon">${svcIcon(s.kind)}</div>
+      <div class="svc-content">
+        <h3>${s.title || s.kind+':'+s.port}</h3>
+        <div class="svc-meta">
+          <span>🌐 ${s.ip}:${s.port}</span>
+          <span>${s.kind}</span>
+        </div>
+        ${s.url ? `<a href="${s.url}" class="access-link" target="_blank" rel="noopener noreferrer">Launch Service →</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+document.getElementById('serviceSearch').addEventListener('input', e => renderServices(e.target.value));
+renderServices();
+
+/* ==================== RENDER INVENTORY ==================== */
+let currentView = 'card';
+
+function renderInventory(filter='') {
+  const fl = filter.toLowerCase();
+  const filtered = DEVICES.filter(d =>
+    !fl || (d.hostname||'').toLowerCase().includes(fl) || (d.mac||'').toLowerCase().includes(fl) || (d.vendor||'').toLowerCase().includes(fl)
+  );
+  document.getElementById('filterCount').textContent = filtered.length + ' results';
+  document.getElementById('deviceCount').textContent = filtered.length + ' devices detected';
+
+  // Card view
+  document.getElementById('devicesCardView').innerHTML = filtered.map(d => `
+    <div class="device-card ${isOnline(d)?'':'offline'}" onclick="showDetail('${d.device_id}')">
+      <div class="card-head">
+        <h3>${d.hostname||'Unknown Device'}</h3>
+        <span class="badge ${isOnline(d)?'badge-online':'badge-offline'}">${isOnline(d)?'🟢 Online':'🔴 Offline'}</span>
+      </div>
+      <div class="info-row"><span class="info-label">MAC Address:</span><code>${d.mac}</code></div>
+      <div class="info-row"><span class="info-label">Vendor:</span><span>${d.vendor||'Unknown'}</span></div>
+      ${d.leases.length?`<div class="info-row"><span class="info-label">IP:</span><span>${d.leases.map(l=>`<span class="ip-tag">🌐 ${l.ip}</span>`).join('')}</span></div>`:''}
+      ${d.services.length?`<div class="info-row"><span class="info-label">Services:</span><span>${d.services.map(s=>`<span class="svc-tag">${s.kind} :${s.port}</span>`).join('')}</span></div>`:''}
+      <div class="info-row" style="font-size:.8rem;color:#999"><span>First: ${fmtDate(d.first_seen)}</span><span>Last: ${fmtDate(d.last_seen)}</span></div>
+    </div>
+  `).join('');
+
+  // Table view
+  document.getElementById('devicesTableBody').innerHTML = filtered.map(d => `
+    <tr onclick="showDetail('${d.device_id}')">
+      <td><span class="badge ${isOnline(d)?'badge-online':'badge-offline'}">${isOnline(d)?'🟢':'🔴'}</span></td>
+      <td><strong>${d.hostname||'-'}</strong></td>
+      <td><code>${d.mac}</code></td>
+      <td>${d.leases.map(l=>l.ip).join(', ')||'-'}</td>
+      <td>${d.vendor||'-'}</td>
+      <td>${d.services.map(s=>s.kind+':'+s.port).join(', ')||'-'}</td>
+      <td>${fmtDate(d.last_seen)}</td>
+    </tr>
+  `).join('');
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('btnCard').classList.toggle('active', v==='card');
+  document.getElementById('btnTable').classList.toggle('active', v==='table');
+  document.getElementById('devicesCardView').style.display = v==='card'?'grid':'none';
+  document.getElementById('devicesTableView').style.display = v==='table'?'table':'none';
+}
+
+document.getElementById('deviceFilter').addEventListener('input', e => renderInventory(e.target.value));
+renderInventory();
+
+/* ==================== DEVICE DETAIL ==================== */
+function showDetail(id) {
+  const d = DEVICES.find(x => x.device_id === id);
+  if (!d) return;
+  const devServices = SERVICES.filter(s => s.device_id === id);
+  const devAlerts = ALERTS.filter(a => a.device_id === id);
+  const online = isOnline(d);
+
+  document.getElementById('detailContent').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+      <h2 style="font-size:1.8rem">${d.hostname||'Unknown Device'}</h2>
+      <span class="badge ${online?'badge-online':'badge-offline'}" style="font-size:1rem;padding:.5rem 1rem">${online?'🟢 Online':'🔴 Offline'}</span>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-box"><label>MAC Address</label><div class="val"><code>${d.mac}</code></div></div>
+      <div class="detail-box"><label>Vendor</label><div class="val">${d.vendor||'Unknown'}</div></div>
+      <div class="detail-box"><label>Device ID</label><div class="val"><code style="font-size:.85rem">${d.device_id}</code></div></div>
+      <div class="detail-box"><label>IP Address</label><div class="val">${d.leases.map(l=>`<span class="ip-tag" style="font-size:1rem">${l.ip}</span>`).join(' ')}</div></div>
+    </div>
+    <h3 style="margin:2rem 0 1rem">📅 Timeline</h3>
+    <div class="timeline">
+      <div class="tl-item"><h4>First Seen</h4><p>${fmtDate(d.first_seen)}</p></div>
+      ${devAlerts.map(a => `<div class="tl-item"><h4>${a.title}</h4><p>${a.description}</p><p style="font-size:.8rem;color:#999">${fmtDate(a.timestamp)}</p></div>`).join('')}
+      <div class="tl-item"><h4>Last Seen</h4><p>${fmtDate(d.last_seen)}</p></div>
+    </div>
+    ${devServices.length ? `
+    <h3 style="margin:2rem 0 1rem">🔌 Detected Services</h3>
+    <div class="services-grid">
+      ${devServices.map(s => `
+        <div class="service-card">
+          <div class="svc-icon">${svcIcon(s.kind)}</div>
+          <div class="svc-content">
+            <h3>${s.kind}</h3>
+            <p style="color:#666">Port ${s.port}</p>
+            ${s.title?`<p style="font-size:.85rem;color:#888">${s.title}</p>`:''}
+            ${s.url ? `<a href="${s.url}" class="access-link" target="_blank" rel="noopener noreferrer">Open →</a>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+  `;
+  showPage('detail');
+}
+
+/* ==================== ALERTS ==================== */
+let alertFilter = 'all';
+
+function renderAlerts() {
+  const filtered = alertFilter === 'all' ? ALERTS : ALERTS.filter(a => !a.acknowledged);
+  document.getElementById('alertsList').innerHTML = filtered.map(a => `
+    <div class="alert-card ${a.acknowledged?'':'unread'}" style="border-left-color:${ALERT_COLORS[a.type]||'#ccc'}">
+      <div class="alert-icon">${ALERT_ICONS[a.type]||'📌'}</div>
+      <div class="alert-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+          <h3>${a.title}</h3>
+          <span class="alert-type-badge" style="background:${ALERT_COLORS[a.type]||'#757575'}">${a.type.replace(/_/g,' ').toUpperCase()}</span>
+        </div>
+        <p>${a.description}</p>
+        <div class="alert-meta">
+          <span>🕒 ${fmtDate(a.timestamp)}</span>
+          ${a.ip?`<span>🌐 ${a.ip}</span>`:''}
+          ${a.mac?`<span>📍 ${a.mac}</span>`:''}
+          ${a.device_id?`<a href="#" onclick="showDetail('${a.device_id}');return false" style="color:#667eea;font-weight:600">View Device →</a>`:''}
+        </div>
+      </div>
+      ${!a.acknowledged?`<button class="ack-btn" onclick="ackAlert('${a.event_id}')" title="Mark as read">✓</button>`:''}
+    </div>
+  `).join('');
+}
+
+function setAlertFilter(f) {
+  alertFilter = f;
+  document.getElementById('tabAll').classList.toggle('active', f==='all');
+  document.getElementById('tabUnread').classList.toggle('active', f==='unread');
+  renderAlerts();
+}
+
+function ackAlert(id) {
+  const a = ALERTS.find(x => x.event_id === id);
+  if (a) a.acknowledged = true;
+  updateAlertCounts();
+  renderAlerts();
+}
+
+document.getElementById('ackAllBtn').addEventListener('click', () => {
+  ALERTS.forEach(a => a.acknowledged = true);
+  updateAlertCounts();
+  renderAlerts();
+});
+
+function updateAlertCounts() {
+  const unread = ALERTS.filter(a => !a.acknowledged).length;
+  document.getElementById('alertSummary').textContent = `${ALERTS.length} total events · ${unread} unread`;
+  document.getElementById('ackAllBtn').textContent = `✅ Acknowledge All (${unread})`;
+  document.getElementById('tabAll').textContent = `All Alerts (${ALERTS.length})`;
+  document.getElementById('tabUnread').textContent = `Unread (${unread})`;
+  if (unread === 0) document.getElementById('ackAllBtn').style.display = 'none';
+}
+
+renderAlerts();
+
+/* ==================== SETTINGS ==================== */
+function triggerScan() {
+  const btn = document.getElementById('scanBtn');
+  btn.textContent = '⏳ Scanning...';
+  btn.disabled = true;
+  setTimeout(() => {
+    document.getElementById('scanResult').style.display = 'flex';
+    btn.textContent = '🚀 Start Network Scan';
+    btn.disabled = false;
+  }, 2000);
+}
+</script>
+</body>
+</html>
