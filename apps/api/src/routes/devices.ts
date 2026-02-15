@@ -7,8 +7,11 @@ const router = express.Router();
 // GET /devices?page=1&per_page=20
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const per_page = Math.min(100, parseInt(req.query.per_page as string) || 20);
+    // Sanitize pagination params: page >= 1, 1 <= per_page <= 100
+    const rawPage = parseInt(req.query.page as string);
+    const rawPerPage = parseInt(req.query.per_page as string);
+    const page = Number.isFinite(rawPage) ? Math.max(1, rawPage) : 1;
+    const per_page = Number.isFinite(rawPerPage) ? Math.min(100, Math.max(1, rawPerPage)) : 20;
     const offset = (page - 1) * per_page;
 
     const total = await db.countDevices();

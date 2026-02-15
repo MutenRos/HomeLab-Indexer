@@ -50,6 +50,25 @@ header nav a.active {
   color: #667eea;
 }
 
+/* Keyboard accessibility — highlight focused nav links */
+header nav a:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Respect user preference to reduce motion/animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 main {
   flex: 1;
   background: #f7fafc;

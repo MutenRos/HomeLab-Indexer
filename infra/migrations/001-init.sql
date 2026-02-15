@@ -1,7 +1,16 @@
+-- ============================================================
 -- Migration 001: Initialize database schema
 -- Created: 2025-12-23
+-- Description: Core schema for HomeLab Indexer.
+--   devices      → Physical/virtual hosts discovered on the LAN
+--   ip_leases    → Historical IP-to-device assignments
+--   services     → Detected network services (HTTP, SSH, DB…)
+--   reservations → Static IP-MAC bindings defined by the user
+--   events       → Alerts & audit log (new device, IP change…)
+--   tags         → User-defined labels for devices
+-- ============================================================
 
--- Devices table
+-- Devices table: each row = one unique network host (keyed by MAC)
 CREATE TABLE IF NOT EXISTS devices (
   device_id TEXT PRIMARY KEY,
   mac TEXT,

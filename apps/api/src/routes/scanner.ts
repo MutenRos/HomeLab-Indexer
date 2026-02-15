@@ -11,6 +11,16 @@ router.post('/scan-now', async (req: Request, res: Response) => {
   try {
     const { subnets, port_scan } = req.body;
 
+    // Validate subnet format (CIDR notation: x.x.x.x/nn)
+    const cidrRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2}$/;
+    if (subnets && Array.isArray(subnets)) {
+      for (const s of subnets) {
+        if (!cidrRegex.test(s.trim())) {
+          return res.status(400).json({ error: `Invalid subnet format: "${s}". Expected CIDR notation (e.g. 192.168.1.0/24)` });
+        }
+      }
+    }
+
     const scanSubnets = subnets || process.env.SCANNER_SUBNETS?.split(',') || ['192.168.1.0/24'];
     const scanId = `scan:${Date.now()}`;
     const timestamp = new Date().toISOString();

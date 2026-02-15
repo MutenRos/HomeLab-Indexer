@@ -137,10 +137,12 @@ export default function Home() {
           <h2>🔗 Quick Access Services</h2>
           <div className="search-box">
             <input
-              type="text"
+              type="search"
               placeholder="🔍 Search services by name, IP, or type..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Search detected network services"
+              maxLength={120}
             />
           </div>
         </div>

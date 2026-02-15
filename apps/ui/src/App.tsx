@@ -12,11 +12,11 @@ function App() {
       <div className="app">
         <header>
           <h1>🏠 HomeLab Indexer</h1>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/inventory">Inventory</Link>
-            <Link to="/alerts">Alerts</Link>
-            <Link to="/settings">Settings</Link>
+          <nav aria-label="Main navigation">
+            <Link to="/" aria-label="Go to dashboard home">Home</Link>
+            <Link to="/inventory" aria-label="View network device inventory">Inventory</Link>
+            <Link to="/alerts" aria-label="View alerts and events">Alerts</Link>
+            <Link to="/settings" aria-label="Configure scanner settings">Settings</Link>
           </nav>
         </header>
         <main>
